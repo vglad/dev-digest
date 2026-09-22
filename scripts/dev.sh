@@ -7,8 +7,8 @@
 #   ./scripts/dev.sh --no-client  # run only Postgres + API (no Next.js)
 #   ./scripts/dev.sh --db-only    # just Postgres + migrate + seed, then exit
 #
-# Idempotent: re-running installs only what's missing, migrations and seed
-# both upsert. Ctrl-C stops the dev servers and leaves Postgres running.
+# Idempotent: re-running checks dependencies; migrations and seed both upsert.
+# Ctrl-C stops the dev servers and leaves Postgres running.
 
 set -euo pipefail
 
@@ -66,15 +66,15 @@ done
 [ "${status:-}" = "healthy" ] || { echo "Postgres did not become healthy in time"; exit 1; }
 log "Postgres healthy"
 
-# --- install deps (only if missing) ------------------------------------------
-install_if_needed() {
-  if [ ! -d "$1/node_modules" ]; then
-    log "installing deps in $1"
-    (cd "$1" && pnpm install)
-  fi
+# --- install deps ------------------------------------------------------------
+# pnpm is fast when the lockfile is already installed. Running it every time
+# also repairs a partial node_modules left behind by an interrupted install.
+install_deps() {
+  log "checking deps in $1"
+  (cd "$1" && pnpm install)
 }
-install_if_needed server
-[ "$DB_ONLY" -eq 0 ] && [ "$RUN_CLIENT" -eq 1 ] && install_if_needed client
+install_deps server
+[ "$DB_ONLY" -eq 0 ] && [ "$RUN_CLIENT" -eq 1 ] && install_deps client
 # reviewer-core's RAW source is imported by the API at runtime (tsconfig alias);
 # without its deps the API crashes at boot with ERR_MODULE_NOT_FOUND. It uses npm.
 [ -d reviewer-core/node_modules ] || { log "installing deps in reviewer-core"; (cd reviewer-core && npm ci); }
@@ -94,6 +94,7 @@ if [ "$DB_ONLY" -eq 1 ]; then
 fi
 
 # --- dev servers -------------------------------------------------------------
+command -v curl >/dev/null || { echo "curl not found (required for the API readiness check)"; exit 1; }
 SERVER_PID=""
 cleanup() {
   log "shutting down dev servers (Postgres stays up; stop it with: docker compose down)"
@@ -104,6 +105,26 @@ trap cleanup EXIT INT TERM
 log "starting API on :3001 (server)"
 (cd server && pnpm dev) &
 SERVER_PID=$!
+
+# `tsx watch` deliberately stays alive when the application crashes, waiting
+# for a source edit. Confirm the HTTP server actually reached readiness before
+# starting the web app; otherwise Next.js can look healthy while every request
+# reports that the engine is unreachable.
+log "waiting for API readiness"
+API_READY=0
+for _ in $(seq 1 60); do
+  if curl -fsS --max-time 1 "http://localhost:3001/health/ready" >/dev/null 2>&1; then
+    API_READY=1
+    break
+  fi
+  sleep 0.5
+done
+if [ "$API_READY" -ne 1 ]; then
+  echo "DevDigest API did not become ready on http://localhost:3001." >&2
+  echo "Review the server error above, then rerun ./scripts/dev.sh." >&2
+  exit 1
+fi
+log "API ready on :3001"
 
 if [ "$RUN_CLIENT" -eq 1 ]; then
   log "starting web on :3000 (client) — Ctrl-C to stop both"
