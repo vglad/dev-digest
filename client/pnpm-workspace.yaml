@@ -1,0 +1,8 @@
+allowBuilds:
+  esbuild: true
+  sharp: true
+
+# pnpm 10 uses this legacy allowlist; pnpm 11+ uses allowBuilds above.
+onlyBuiltDependencies:
+  - esbuild
+  - sharp

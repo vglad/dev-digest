@@ -101,7 +101,7 @@ These are intentionally **not** in the starter — each lesson adds one back:
 This script:
 1. starts Postgres (`docker compose up -d`) and waits until it's healthy,
 2. creates `server/.env` and `client/.env` from `.env.example` if missing,
-3. installs deps in `server/` and `client/` (only when `node_modules` is absent),
+3. checks/installs deps in `server/` and `client/`,
 4. applies DB migrations and seeds demo data,
 5. launches the API (`:3001`) and the web app (`:3000`).
 
@@ -151,11 +151,18 @@ Postgres); everything else is hermetic. The browser e2e flows live in
 
 ## Troubleshooting
 
+- **“Cannot reach the DevDigest engine at http://localhost:3001”** — the web
+  app is running but the API is not. Run `./scripts/dev.sh`; migrating the
+  database alone does not start the API. The script waits for API readiness and
+  prints the server startup error if it cannot listen on port 3001.
 - **`relation ... does not exist` / API errors on first run** — migrations weren't
   applied. The server does **not** migrate on boot: run `cd server && pnpm db:migrate`.
 - **Port 5432 already in use** — another Postgres is running. Stop it, or change the
   host port in `docker-compose.yml`.
 - **`vector` type errors** — the pgvector extension is enabled by migration `0000`;
   make sure migrations ran against the Dockerized DB, not a different one.
+- **`ERR_PNPM_IGNORED_BUILDS`** — update your checkout and rerun the script. The
+  trusted dependency build scripts are declared in each package's
+  `pnpm-workspace.yaml`; rerunning also repairs a partial install.
 - **Reset everything** — `docker compose down -v` drops the volume, then re-run
   `./scripts/dev.sh`.

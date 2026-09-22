@@ -103,15 +103,15 @@ done
 [ "$status" = "healthy" ] || { echo "isolated Postgres did not become healthy in time"; exit 1; }
 log "Postgres healthy"
 
-# --- install deps (only if missing) ------------------------------------------
-install_if_needed() {
-  if [ ! -d "$1/node_modules" ]; then
-    log "installing deps in $1"
-    (cd "$1" && pnpm install)
-  fi
+# --- install deps ------------------------------------------------------------
+# pnpm is fast when the lockfile is already installed. Running it every time
+# also repairs a partial node_modules left behind by an interrupted install.
+install_deps() {
+  log "checking deps in $1"
+  (cd "$1" && pnpm install)
 }
-install_if_needed server
-install_if_needed client
+install_deps server
+install_deps client
 # reviewer-core's RAW source is imported by the API at runtime (tsconfig alias);
 # without its deps the API crashes at boot with ERR_MODULE_NOT_FOUND. It uses npm.
 [ -d reviewer-core/node_modules ] || { log "installing deps in reviewer-core"; (cd reviewer-core && npm ci); }

@@ -1,0 +1,10 @@
+allowBuilds:
+  cpu-features: false
+  esbuild: true
+  protobufjs: true
+  ssh2: false
+
+# pnpm 10 uses this legacy allowlist; pnpm 11+ uses allowBuilds above.
+onlyBuiltDependencies:
+  - esbuild
+  - protobufjs
