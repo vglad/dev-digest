@@ -90,7 +90,7 @@ These are intentionally **not** in the starter — each lesson adds one back:
 
 ## Prerequisites
 
-- **Node** ≥ 22 · **pnpm** ≥ 10 (`npm i -g pnpm`) · **Docker** (for Postgres)
+- **Node** 22.13+ on the 22.x line, or 24+ (required by ESLint 10) · **pnpm** ≥ 10 (`npm i -g pnpm`) · **Docker** (for Postgres)
 
 ## Quick start (from zero)
 

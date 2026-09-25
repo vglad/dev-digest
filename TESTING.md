@@ -58,12 +58,24 @@ No `chat`, no model key.
 
 ## Running locally
 
+Each package has an ESLint flat config and its own lint dependencies. Run lint
+from that package: `pnpm lint` in `client/` and `server/`, or `npm run lint` in
+`reviewer-core/` and `e2e/`. Lint checks TypeScript/TSX source, tests, and TypeScript
+configuration files with ESLint and typescript-eslint recommended rules.
+Generated output, vendored code, migrations, runtime clones, and E2E artifacts
+are excluded. The client, server, and engine allow existing explicit `any`,
+unused bindings, and empty catch blocks; lint does not enforce formatting or
+React-specific rules. Run typecheck separately for compiler checks.
+Configuration follows the [typescript-eslint flat-config guide](https://typescript-eslint.io/getting-started/).
+
 ```sh
 # per package
-cd client        && pnpm test           # + pnpm typecheck
-cd reviewer-core && npm test
+(cd client && pnpm lint && pnpm typecheck && pnpm test)
+(cd reviewer-core && npm run lint && npm run typecheck && npm test)
+(cd e2e && npm run lint && npm run typecheck)
 
 # server — the unit/integration split (see note below)
+(cd server && pnpm lint && pnpm typecheck)
 cd server && pnpm exec vitest run --exclude '**/*.it.test.ts'   # unit, no Docker
 cd server && pnpm exec vitest run .it.test                      # integration, needs Docker
 cd server && pnpm test                                          # both
