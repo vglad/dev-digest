@@ -7,7 +7,7 @@ description: "Create Mermaid diagrams in markdown. Use when the user wants to vi
 
 Generate Mermaid diagrams embedded in markdown that **communicate clearly** — showing relationships, flows, and structure that words alone can't express.
 
-See `examples.md` for ready-to-use templates for each diagram type. See `references.md` for official docs and tools.
+See `examples.md` for ready-to-use templates for each diagram type.
 
 ---
 
@@ -87,7 +87,7 @@ end
 
 ## Sequence Diagrams
 
-Use for API flows, service interactions, and request/response patterns. Ideal for documenting Express routes, middleware chains, and client-server communication.
+Use for API flows, service interactions, request/response patterns, middleware chains, and client-server communication.
 
 ### Syntax
 
@@ -108,7 +108,7 @@ Use for API flows, service interactions, and request/response patterns. Ideal fo
 
 ## Class Diagrams
 
-Use for data models, Mongoose schemas, and object relationships.
+Use for data models, schemas, and object relationships.
 
 ### Relationships
 
@@ -137,7 +137,7 @@ class ClassName {
 
 ## ER Diagrams
 
-Use for MongoDB schema relationships, database design.
+Use for database schema relationships and data-model design.
 
 ### Relationship Syntax
 

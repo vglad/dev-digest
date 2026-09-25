@@ -27,4 +27,4 @@ tags: section-prefix, technique, tool, related-concepts
 - Exception 1
 - Exception 2
 
-Reference: [Reference Title](URL)
+Reference: replace with an authoritative Markdown link.

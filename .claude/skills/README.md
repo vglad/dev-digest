@@ -1,6 +1,6 @@
 # Skills
 
-Reusable AI skills that provide specialized knowledge and workflows. Canonical location is `.claude/skills/` with a symlink at `.cursor/skills/ → ../.claude/skills` for Cursor compatibility. Shared with the team via version control.
+Reusable, provider-neutral agent skills that provide specialized knowledge and workflows. The canonical files live in `.claude/skills/` for course compatibility; `.agents/skills` points to this directory so Codex discovers the same skills. They are shared with the team through version control.
 
 ## Catalog
 
@@ -21,14 +21,14 @@ Reusable AI skills that provide specialized knowledge and workflows. Canonical l
 
 Skills are modular packages that extend the AI agent with specialized knowledge and workflows. Unlike rules (always applied) or agents (invoked for specific tasks), skills are loaded on-demand when the agent determines they're relevant.
 
-### Skills vs Rules vs Commands vs Agents
+### Skills vs persistent guidance and automation
 
-| Type | Scope | Loaded | Purpose |
-|------|-------|--------|---------|
-| **Rules** (`.mdc`) | Project conventions | Always or by file pattern | Persistent guardrails |
-| **Commands** (`.md`) | User actions | On `/command` invocation | Slash commands |
-| **Skills** (`.md`) | Domain knowledge | On-demand by agent | Specialized knowledge |
-| **Agents** (`.md`) | Workflows | Via Task tool | Subagent orchestration |
+| Type | Loaded | Purpose |
+|------|--------|---------|
+| **Repository guidance** (`AGENTS.md`, imported by `CLAUDE.md`) | At session start for its directory scope | Persistent conventions and guardrails shared by Codex and Claude Code |
+| **Skills** (`SKILL.md`) | On demand when selected explicitly or by description | Specialized knowledge and repeatable workflows |
+| **Hooks** | On matching lifecycle events | Deterministic automation and enforcement |
+| **Subagents** | When delegated a bounded task | Isolated or parallel work |
 
 ## Creating New Skills
 
