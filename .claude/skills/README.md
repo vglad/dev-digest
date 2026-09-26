@@ -6,6 +6,7 @@ Reusable, provider-neutral agent skills that provide specialized knowledge and w
 
 | Skill | Scope | Description |
 |-------|-------|-------------|
+| [engineering-insights](engineering-insights/SKILL.md) | Shared | Capture verified, durable project discoveries in the appropriate scoped `INSIGHTS.md` |
 | [fastify-best-practices](fastify-best-practices/SKILL.md) | Backend | Fastify routes, plugins, JSON-schema validation, error handling |
 | [drizzle-orm-patterns](drizzle-orm-patterns/SKILL.md) | Backend | Drizzle schema, queries, relations, transactions, migrations |
 | [postgresql-table-design](postgresql-table-design/SKILL.md) | Backend | Postgres schema design, data types, indexing, constraints |
@@ -32,8 +33,8 @@ Skills are modular packages that extend the AI agent with specialized knowledge 
 
 ## Creating New Skills
 
-Each skill has:
+Each skill requires:
 
 - `SKILL.md` — Main skill file with rules and conventions (required)
-- `examples.md` — Code examples showing good/bad patterns (recommended)
-- `references.md` — Sources and rationale (optional)
+
+Supporting files such as examples, references, scripts, and assets are optional and should be added only when they serve a concrete purpose.
