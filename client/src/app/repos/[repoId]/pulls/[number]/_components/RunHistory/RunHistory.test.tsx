@@ -25,6 +25,7 @@ function run(o: Partial<RunSummary>): RunSummary {
     duration_ms: 1000,
     tokens_in: 100,
     tokens_out: 50,
+    cost_usd: null,
     findings_count: 0,
     grounding: "0/0 passed",
     ran_at: "2026-06-11T18:44:34.000Z",
@@ -71,5 +72,23 @@ describe("RunHistory — outcome badge", () => {
   it("a running run reads 'running'", () => {
     renderRuns([run({ status: "running", score: null, blockers: null })]);
     expect(screen.getByText("running")).toBeInTheDocument();
+  });
+
+  it("shows each run cost regardless of status, with a placeholder for unknown cost", () => {
+    renderRuns([
+      run({ run_id: "done", status: "done", tokens_in: 9119, cost_usd: 0.0013 }),
+      run({ run_id: "running", status: "running", tokens_in: 8000, cost_usd: 0.5 }),
+      run({ run_id: "failed", status: "failed", tokens_in: 7000, cost_usd: 0.4 }),
+      run({ run_id: "cancelled", status: "cancelled", tokens_in: 6000, cost_usd: 0 }),
+      run({ run_id: "unknown", status: "running", cost_usd: null }),
+    ]);
+
+    expect(screen.getByText("9,119 tok ·")).toBeInTheDocument();
+    expect(screen.getByLabelText("Review cost in USD: $0.0013")).toBeInTheDocument();
+    expect(screen.queryByText("8,000 tok ·")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Review cost in USD: $0.5000")).toBeInTheDocument();
+    expect(screen.getByLabelText("Review cost in USD: $0.4000")).toBeInTheDocument();
+    expect(screen.getByLabelText("Review cost in USD: $0.0000")).toBeInTheDocument();
+    expect(screen.getByLabelText("Review cost in USD: —")).toBeInTheDocument();
   });
 });

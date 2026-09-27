@@ -201,6 +201,15 @@ d('A2 reviews + agents (Testcontainers pg)', () => {
     const trace = (await app.inject({ method: 'GET', url: `/runs/${runId}/trace` })).json();
     expect(trace.config.model).toBe('gpt-4.1');
     expect(trace.stats.grounding).toBe('1/2 passed');
+    expect(trace.stats.cost_usd).toBe(0.001);
+    const history = (await app.inject({ method: 'GET', url: `/pulls/${pr.id}/runs` })).json();
+    expect(history.find((item: { run_id: string }) => item.run_id === runId)?.cost_usd).toBe(
+      trace.stats.cost_usd,
+    );
+    const detail = (await app.inject({ method: 'GET', url: `/pulls/${pr.id}` })).json();
+    const pulls = (await app.inject({ method: 'GET', url: `/repos/${pr.repoId}/pulls` })).json();
+    expect(detail.total_run_cost_usd).toBe(trace.stats.cost_usd);
+    expect(pulls.find((p: { id: string }) => p.id === pr.id).total_run_cost_usd).toBe(trace.stats.cost_usd);
     expect(trace.log.length).toBeGreaterThan(0);
 
     // agent_runs row populated for A5 to aggregate

@@ -11,6 +11,7 @@ import type { ReviewRecord, Verdict } from "@devdigest/shared";
 import { FindingsPanel } from "../FindingsPanel";
 import { VerdictBanner } from "../VerdictBanner";
 import { useDeleteReview } from "../../../../../../../lib/hooks/reviews";
+import { RunCost } from "@/components/RunCost";
 
 const VERDICT_COLOR: Record<string, string> = {
   request_changes: "var(--crit)",
@@ -25,6 +26,7 @@ function formatWhen(iso: string): string {
 
 export function ReviewRunAccordion({
   review,
+  costUsd,
   prId,
   defaultOpen = false,
   repoFullName,
@@ -33,6 +35,7 @@ export function ReviewRunAccordion({
   targetNonce = 0,
 }: {
   review: ReviewRecord;
+  costUsd?: number | null;
   prId: string;
   defaultOpen?: boolean;
   repoFullName?: string | null;
@@ -72,9 +75,13 @@ export function ReviewRunAccordion({
       <div
         role="button"
         tabIndex={0}
+        aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
         onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") setOpen((o) => !o);
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setOpen((o) => !o);
+          }
         }}
         style={{
           width: "100%",
@@ -86,7 +93,20 @@ export function ReviewRunAccordion({
           color: "var(--text-primary)",
         }}
       >
-        <Icon.Cpu size={15} style={{ color: "var(--text-muted)" }} />
+        <span
+          style={{
+            width: 24,
+            height: 24,
+            borderRadius: 6,
+            background: "var(--accent-bg)",
+            color: "var(--accent)",
+            display: "inline-grid",
+            placeItems: "center",
+            flexShrink: 0,
+          }}
+        >
+          <Icon.Cpu size={13} />
+        </span>
         <span style={{ fontWeight: 600, fontSize: 14 }}>{review.agent_name ?? "Agent"}</span>
         {review.verdict && (
           <Badge color={verdictColor} bg="transparent">
@@ -103,6 +123,7 @@ export function ReviewRunAccordion({
             {review.score}
           </Badge>
         )}
+        <RunCost cost={costUsd} />
         <span className="mono" style={{ fontSize: 12, color: "var(--text-muted)" }}>
           {formatWhen(review.created_at)}
         </span>

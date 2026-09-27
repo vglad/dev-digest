@@ -1,4 +1,8 @@
 {
+  "cost": {
+    "title": "Cost of this review",
+    "description": "Review cost in USD"
+  },
   "finding": {
     "accepted": "accepted",
     "dismissed": "dismissed",
@@ -92,6 +96,7 @@
       "size": "Size",
       "score": "Score",
       "status": "Status",
+      "cost": "Cost",
       "updated": "Updated"
     },
     "filesCount": "{count} files",

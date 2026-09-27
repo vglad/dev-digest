@@ -58,6 +58,7 @@ export const MemoryPulled = z.object({
 export type MemoryPulled = z.infer<typeof MemoryPulled>;
 
 export const RunStats = z.object({
+  cost_usd: z.number().nullable().optional(),
   duration_ms: z.number().int(),
   tokens_in: z.number().int(),
   tokens_out: z.number().int(),
@@ -101,6 +102,7 @@ export const RunSummary = z.object({
   duration_ms: z.number().int().nullable(),
   tokens_in: z.number().int().nullable(),
   tokens_out: z.number().int().nullable(),
+  cost_usd: z.number().nullable(),
   findings_count: z.number().int().nullable(),
   grounding: z.string().nullable(),
   ran_at: z.string().nullable(),

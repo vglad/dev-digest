@@ -8,6 +8,7 @@ import { getContext } from '../_shared/context.js';
 import { IdParams } from '../_shared/schemas.js';
 import { AppError, NotFoundError } from '../../platform/errors.js';
 import { deriveReviewStatus } from './status.js';
+import { successfulRunCosts } from './successful-run-cost.js';
 
 /**
  * F1 — pulls module. PR import via Octokit (list + per-PR detail).
@@ -116,6 +117,7 @@ export default async function pullsRoutes(appBase: FastifyInstance) {
     // grouping is cheap. (The per-severity FINDINGS breakdown is intentionally
     // not surfaced on the list — findings live on the PR detail page.)
     const prIds = rows.map((r) => r.id);
+    const costs = await successfulRunCosts(container.db, workspaceId, prIds);
     const latestReviewByPr = new Map<string, { score: number | null }>();
     if (prIds.length > 0) {
       const reviewRows = await container.db
@@ -153,6 +155,7 @@ export default async function pullsRoutes(appBase: FastifyInstance) {
         opened_at: r.openedAt?.toISOString() ?? null,
         updated_at: r.updatedAt?.toISOString() ?? null,
         score: review ? review.score : null,
+        total_run_cost_usd: costs.get(r.id) ?? null,
       };
     });
   });
@@ -166,6 +169,8 @@ export default async function pullsRoutes(appBase: FastifyInstance) {
         and(eq(t.pullRequests.workspaceId, workspaceId), eq(t.pullRequests.id, req.params.id)),
       );
     if (!pr) throw new NotFoundError('Pull request not found');
+    const costs = await successfulRunCosts(container.db, workspaceId, [pr.id]);
+    const total_run_cost_usd = costs.get(pr.id) ?? null;
     const [repo] = await container.db
       .select()
       .from(t.repos)
@@ -215,13 +220,14 @@ export default async function pullsRoutes(appBase: FastifyInstance) {
         })
         .where(eq(t.pullRequests.id, pr.id));
 
-      return { ...detail, id: pr.id };
+      return { ...detail, id: pr.id, total_run_cost_usd };
     } catch (err) {
       app.log.warn({ err }, 'GitHub PR detail refresh skipped (no token / offline); serving persisted detail');
       const files = await container.db.select().from(t.prFiles).where(eq(t.prFiles.prId, pr.id));
       const commits = await container.db.select().from(t.prCommits).where(eq(t.prCommits.prId, pr.id));
       return {
         id: pr.id,
+        total_run_cost_usd,
         number: pr.number,
         title: pr.title,
         author: pr.author,

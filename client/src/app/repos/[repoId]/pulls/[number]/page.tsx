@@ -43,7 +43,7 @@ export default function PRDetailPage() {
   // navigation AND reload, and self-clears via polling when runs finish.
   const qc = useQueryClient();
   const { data: activeRuns } = usePrActiveRuns(prId);
-  const { data: prRuns } = usePrRuns(prId);
+  const { data: prRuns } = usePrRuns(prId, repoId);
   const deleteRun = useDeleteRun(prId);
   const liveRunIds = (activeRuns ?? []).map((r) => r.run_id);
   const reviewRunning = liveRunIds.length > 0;
