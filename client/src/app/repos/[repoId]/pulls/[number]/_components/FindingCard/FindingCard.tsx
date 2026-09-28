@@ -4,6 +4,7 @@
    timestamps. */
 "use client";
 
+import type { FindingJump } from "@/components/severity-findings/helpers";
 import React from "react";
 import { useTranslations } from "next-intl";
 import {
@@ -27,6 +28,7 @@ export function FindingCard({
   f,
   focused,
   defaultExpanded,
+  jumpRequest,
   onAction,
   pending,
   repoFullName,
@@ -35,6 +37,7 @@ export function FindingCard({
   f: FindingRecord;
   focused?: boolean;
   defaultExpanded?: boolean;
+  jumpRequest?: FindingJump;
   onAction?: (action: FindingActionKind, reply?: string) => void;
   pending?: boolean;
   repoFullName?: string | null;
@@ -42,6 +45,14 @@ export function FindingCard({
 }) {
   const t = useTranslations("prReview");
   const [expanded, setExpanded] = React.useState(defaultExpanded ?? false);
+  const cardRef = React.useRef<HTMLElement>(null);
+  React.useEffect(() => {
+    if (!jumpRequest) return;
+    setExpanded(true);
+    cardRef.current?.focus({ preventScroll: true });
+    cardRef.current?.scrollIntoView?.({ behavior: "smooth", block: "center" });
+    jumpRequest.onReached();
+  }, [jumpRequest]);
   const sevColor = SEV_COLOR[f.severity] ?? SEV_COLOR_FALLBACK;
   const fileHref =
     repoFullName && headSha
@@ -52,7 +63,7 @@ export function FindingCard({
   const muted = accepted || dismissed;
 
   return (
-    <div data-finding-id={f.id} style={s.card(!!focused, sevColor, muted)}>
+    <article ref={cardRef} tabIndex={-1} aria-label={f.title} data-finding-id={f.id} style={s.card(!!focused, sevColor, muted)}>
       <div onClick={() => setExpanded((e) => !e)} style={s.header}>
         <div style={s.badgeWrap}>
           <SeverityBadge severity={f.severity as Severity} compact />
@@ -112,6 +123,6 @@ export function FindingCard({
           </div>
         </div>
       )}
-    </div>
+    </article>
   );
 }

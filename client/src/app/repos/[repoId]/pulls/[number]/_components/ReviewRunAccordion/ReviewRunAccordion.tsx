@@ -5,9 +5,10 @@
    and collapsible so older runs don't bury the latest. */
 "use client";
 
+import type { FindingJump } from "@/components/severity-findings/helpers";
 import React from "react";
 import { Icon, Badge } from "@devdigest/ui";
-import type { ReviewRecord, Verdict } from "@devdigest/shared";
+import type { ReviewRecord, Verdict, Severity } from "@devdigest/shared";
 import { FindingsPanel } from "../FindingsPanel";
 import { VerdictBanner } from "../VerdictBanner";
 import { useDeleteReview } from "../../../../../../../lib/hooks/reviews";
@@ -31,8 +32,11 @@ export function ReviewRunAccordion({
   defaultOpen = false,
   repoFullName,
   headSha,
-  targetRunId = null,
+  targetReviewId = null,
+  severity = null,
+  onSelectSeverity,
   targetNonce = 0,
+  targetFinding,
 }: {
   review: ReviewRecord;
   costUsd?: number | null;
@@ -40,20 +44,21 @@ export function ReviewRunAccordion({
   defaultOpen?: boolean;
   repoFullName?: string | null;
   headSha?: string | null;
-  /** When this matches review.run_id, the accordion opens and scrolls into view
-   *  (driven from the Timeline: clicking an agent name navigates here). */
-  targetRunId?: string | null;
+  /** Review identity also supports historical reviews without run IDs. */
+  targetReviewId?: string | null;
+  severity?: Severity | null;
+  onSelectSeverity?: (severity: Severity | null) => void;
   targetNonce?: number;
+  targetFinding?: FindingJump | null;
 }) {
   const [open, setOpen] = React.useState(defaultOpen);
   const rootRef = React.useRef<HTMLDivElement | null>(null);
   React.useEffect(() => {
-    if (review.run_id && review.run_id === targetRunId) {
+    if (review.id === targetReviewId) {
       setOpen(true);
-      rootRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (!targetFinding && !rootRef.current?.contains(document.activeElement)) rootRef.current?.scrollIntoView?.({ behavior: "smooth", block: "start" });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [targetRunId, targetNonce, review.run_id]);
+  }, [targetReviewId, targetNonce, review.id, severity, targetFinding]);
   const del = useDeleteReview(prId);
   const findings = review.findings;
   const blockers = findings.filter((f) => f.severity === "CRITICAL" && !f.dismissed_at).length;
@@ -62,7 +67,7 @@ export function ReviewRunAccordion({
   return (
     <div
       ref={rootRef}
-      id={review.run_id ? `review-run-${review.run_id}` : undefined}
+      id={`review-${review.id}`}
       style={{
         border: "1px solid var(--border)",
         borderRadius: 10,
@@ -170,6 +175,9 @@ export function ReviewRunAccordion({
           )}
           <FindingsPanel
             findings={findings}
+            targetFinding={targetFinding}
+            severity={severity}
+            onSelectSeverity={onSelectSeverity}
             prId={prId}
             repoFullName={repoFullName}
             headSha={headSha}

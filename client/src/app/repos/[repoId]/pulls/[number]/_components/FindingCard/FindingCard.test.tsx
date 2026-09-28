@@ -5,7 +5,10 @@ import type { FindingRecord } from "@devdigest/shared";
 import messages from "../../../../../../../../messages/en/prReview.json";
 import { FindingCard } from "./FindingCard";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 const FINDING: FindingRecord = {
   id: "f1",
@@ -56,5 +59,22 @@ describe("FindingCard (smoke, both themes)", () => {
     expect(onAction).toHaveBeenCalledWith("accept");
     fireEvent.click(screen.getByText("Dismiss"));
     expect(onAction).toHaveBeenCalledWith("dismiss");
+  });
+
+  it("can highlight and unhighlight a finding without conflicting border updates", () => {
+    const consoleError = vi.spyOn(console, "error");
+    const { rerender } = render(<FindingCard f={FINDING} focused={false} />, {
+      wrapper: ({ children }) => (
+        <NextIntlClientProvider locale="en" messages={{ prReview: messages }}>
+          {children}
+        </NextIntlClientProvider>
+      ),
+    });
+
+    rerender(<FindingCard f={FINDING} focused />);
+    rerender(<FindingCard f={FINDING} focused={false} />);
+
+    expect(screen.getByRole("article", { name: FINDING.title })).toBeVisible();
+    expect(consoleError).not.toHaveBeenCalled();
   });
 });

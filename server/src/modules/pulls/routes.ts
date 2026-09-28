@@ -7,7 +7,7 @@ import * as t from '../../db/schema.js';
 import { getContext } from '../_shared/context.js';
 import { IdParams } from '../_shared/schemas.js';
 import { AppError, NotFoundError } from '../../platform/errors.js';
-import { deriveReviewStatus } from './status.js';
+import { deriveReviewStatus, rollupSeverities } from './status.js';
 import { successfulRunCosts } from './successful-run-cost.js';
 
 /**
@@ -81,7 +81,7 @@ export default async function pullsRoutes(appBase: FastifyInstance) {
     const rows = await container.db
       .select()
       .from(t.pullRequests)
-      .where(eq(t.pullRequests.repoId, repo.id));
+      .where(and(eq(t.pullRequests.repoId, repo.id), eq(t.pullRequests.workspaceId, workspaceId)));
 
     // Diff stats aren't on GitHub's PR-list payload, so freshly-imported PRs
     // land with zeroed size/diff. Backfill them once from the detail endpoint
@@ -112,22 +112,34 @@ export default async function pullsRoutes(appBase: FastifyInstance) {
       }
     }
 
-    // Latest-review SCORE per PR for the list's score ring. Computed on read
-    // from reviews (no FK denorm); the list is small, so one IN-query + JS
-    // grouping is cheap. (The per-severity FINDINGS breakdown is intentionally
-    // not surfaced on the list — findings live on the PR detail page.)
+    // Score and severity counts always describe the same persisted review.
+    // Runs without a review (running/failed) must not mask this summary.
     const prIds = rows.map((r) => r.id);
     const costs = await successfulRunCosts(container.db, workspaceId, prIds);
-    const latestReviewByPr = new Map<string, { score: number | null }>();
+    const latestReviewByPr = new Map<string, {
+      id: string; runId: string | null; score: number | null;
+    }>();
+    const findingsByReview = new Map<string, { severity: string }[]>();
     if (prIds.length > 0) {
       const reviewRows = await container.db
-        .select({ prId: t.reviews.prId, score: t.reviews.score })
+        .select({ id: t.reviews.id, runId: t.reviews.runId, prId: t.reviews.prId, score: t.reviews.score })
         .from(t.reviews)
-        .where(and(inArray(t.reviews.prId, prIds), eq(t.reviews.kind, 'review')))
-        .orderBy(desc(t.reviews.createdAt));
-      // Rows are newest-first → first seen per PR is the latest review.
+        .where(and(eq(t.reviews.workspaceId, workspaceId), inArray(t.reviews.prId, prIds), eq(t.reviews.kind, 'review')))
+        .orderBy(desc(t.reviews.createdAt), desc(t.reviews.id));
       for (const rv of reviewRows) {
-        if (!latestReviewByPr.has(rv.prId)) latestReviewByPr.set(rv.prId, { score: rv.score });
+        if (!latestReviewByPr.has(rv.prId)) latestReviewByPr.set(rv.prId, rv);
+      }
+      const reviewIds = [...latestReviewByPr.values()].map((r) => r.id);
+      if (reviewIds.length > 0) {
+        const findings = await container.db
+          .select({ reviewId: t.findings.reviewId, severity: t.findings.severity })
+          .from(t.findings)
+          .where(inArray(t.findings.reviewId, reviewIds));
+        for (const finding of findings) {
+          const group = findingsByReview.get(finding.reviewId) ?? [];
+          group.push(finding);
+          findingsByReview.set(finding.reviewId, group);
+        }
       }
     }
 
@@ -155,6 +167,11 @@ export default async function pullsRoutes(appBase: FastifyInstance) {
         opened_at: r.openedAt?.toISOString() ?? null,
         updated_at: r.updatedAt?.toISOString() ?? null,
         score: review ? review.score : null,
+        latest_review: review ? {
+          id: review.id,
+          run_id: review.runId,
+          counts: rollupSeverities(findingsByReview.get(review.id) ?? []),
+        } : null,
         total_run_cost_usd: costs.get(r.id) ?? null,
       };
     });

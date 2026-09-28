@@ -80,18 +80,19 @@ describe("RunCost", () => {
       "author",
       "size",
       "score",
+      "findings",
       "status",
       "cost",
       "updated",
     ]);
-    expect(GRID).toBe("1fr 132px 92px 60px 118px 76px 78px");
+    expect(GRID).toBe("minmax(160px, 1fr) 132px 92px 60px 122px 118px 76px 78px");
 
     const cost = screen.getByLabelText("Review cost in USD: —");
     const costCell = cost.parentElement;
     const row = costCell?.parentElement;
     expect(row).not.toBeNull();
     expect(row).toHaveStyle({ gridTemplateColumns: GRID });
-    expect(Array.from(row!.children).indexOf(costCell!)).toBe(5);
+    expect(Array.from(row!.children).indexOf(costCell!)).toBe(6);
     expect(costCell).toHaveTextContent("—");
     expect(cost).toBeVisible();
     expect(cost).not.toHaveStyle({ background: "var(--bg-surface)" });
