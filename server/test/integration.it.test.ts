@@ -12,7 +12,6 @@ const hasDocker = await dockerAvailable();
 const d = hasDocker ? describe : describe.skip;
 
 if (!hasDocker) {
-  // eslint-disable-next-line no-console
   console.warn(
     '[integration] Docker not available — skipping Testcontainers integration tests.',
   );

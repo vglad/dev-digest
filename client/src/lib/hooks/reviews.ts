@@ -209,7 +209,7 @@ export function useRunEvents(runIds: string[]) {
       for (const es of sources) es.close();
       setRunning(false);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Reconnect only when the set of run IDs changes.
   }, [key]);
 
   return { events, running };

@@ -36,7 +36,7 @@ export function ConfigTab({ agent }: { agent: Agent }) {
     setCiFailOn(agent.ci_fail_on);
     setRepoIntel(agent.repo_intel);
     setEnabled(agent.enabled);
-  }, [agent.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [agent.id]); // Reset the form only when switching agents.
 
   const { data: models } = useProviderModels(provider);
   // Show the price (USD per 1M in/out tokens) in the label when the provider
