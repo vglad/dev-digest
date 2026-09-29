@@ -1,16 +1,20 @@
 "use client";
 
+import type { FindingJump } from "@/components/severity-findings/helpers";
 import React, { useCallback } from "react";
 import { Icon, Badge, Button, SectionLabel, EmptyState } from "@devdigest/ui";
 import { RunStatus } from "../RunStatus";
 import { RunHistory } from "../RunHistory/RunHistory";
 import { ReviewRunAccordion } from "../ReviewRunAccordion";
 import { s } from "./styles";
-import type { FindingRecord, ReviewRecord, RunSummary, PrCommit } from "@devdigest/shared";
+import type { Severity, FindingRecord, ReviewRecord, RunSummary, PrCommit } from "@devdigest/shared";
 import type { UseMutationResult } from "@tanstack/react-query";
 
 interface FindingsTabProps {
   prId: string | null;
+  selectedReviewId?: string | null;
+  selectedSeverity?: Severity | null;
+  onSelectFindings?: (reviewId: string, severity: Severity | null) => void;
   liveRunIds: string[];
   reviewRunning: boolean;
   lethalTrifecta: FindingRecord[];
@@ -28,6 +32,9 @@ interface FindingsTabProps {
 
 export function FindingsTab({
   prId,
+  selectedReviewId = null,
+  selectedSeverity = null,
+  onSelectFindings,
   liveRunIds,
   reviewRunning,
   lethalTrifecta,
@@ -63,13 +70,22 @@ export function FindingsTab({
     [onDelete],
   );
 
-  // Timeline → Review-runs navigation: clicking an agent name in the timeline
-  // opens + scrolls to that run's accordion below. The nonce re-triggers the
-  // scroll even when the same run is clicked twice.
-  const [target, setTarget] = React.useState<{ runId: string; n: number } | null>(null);
-  const handleGoToReview = useCallback((runId: string) => {
-    setTarget((p) => ({ runId, n: (p?.n ?? 0) + 1 }));
-  }, []);
+  const [targetFinding, setTargetFinding] = React.useState<FindingJump | null>(null);
+  const [targetNonce, setTargetNonce] = React.useState(0);
+  const handleGoToReview = (runId: string) => {
+    const review = runs.find((item) => item.run_id === runId);
+    if (review) {
+      setTargetFinding(null);
+      onSelectFindings?.(review.id, null);
+      setTargetNonce((n) => n + 1);
+    }
+  };
+
+  const handleGoToFinding = (finding: FindingRecord) => {
+    onSelectFindings?.(finding.review_id, null);
+    setTargetFinding({ finding, onReached: () => setTargetFinding(null) });
+    setTargetNonce((n) => n + 1);
+  };
 
   return (
     <section>
@@ -130,9 +146,11 @@ export function FindingsTab({
           </SectionLabel>
           <RunHistory
             runs={prRuns ?? []}
+            reviews={runs}
             commits={prCommits}
             onOpenTrace={handleOpenTrace}
             onGoToReview={handleGoToReview}
+            onGoToFinding={handleGoToFinding}
             onDelete={handleDelete}
           />
         </div>
@@ -158,12 +176,16 @@ export function FindingsTab({
           <ReviewRunAccordion
             key={review.id}
             review={review}
+            costUsd={prRuns?.find((run) => run.run_id === review.run_id)?.cost_usd ?? null}
             prId={prId}
             defaultOpen={i === 0}
             repoFullName={repoFullName}
             headSha={headSha}
-            targetRunId={target?.runId ?? null}
-            targetNonce={target?.n ?? 0}
+            targetReviewId={selectedReviewId}
+            targetNonce={targetNonce}
+            targetFinding={targetFinding?.finding.review_id === review.id ? targetFinding : null}
+            severity={selectedReviewId === review.id ? selectedSeverity : null}
+            onSelectSeverity={(severity) => onSelectFindings?.(review.id, severity)}
           />
         ))
       )}

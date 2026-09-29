@@ -21,7 +21,8 @@ import { usePrReviews, useCancelRun, usePrActiveRuns, usePrRuns, useDeleteRun } 
 import { useActiveRepo, useRepoNotFound } from "../../../../../lib/repo-context";
 import { ApiError } from "../../../../../lib/api";
 import { githubPrUrl } from "../../../../../lib/github-urls";
-import type { FindingRecord } from "@devdigest/shared";
+import { parseSeverity } from "@/components/severity-findings/helpers";
+import type { FindingRecord, Severity } from "@devdigest/shared";
 
 export default function PRDetailPage() {
   const params = useParams<{ repoId: string; number: string }>();
@@ -43,7 +44,7 @@ export default function PRDetailPage() {
   // navigation AND reload, and self-clears via polling when runs finish.
   const qc = useQueryClient();
   const { data: activeRuns } = usePrActiveRuns(prId);
-  const { data: prRuns } = usePrRuns(prId);
+  const { data: prRuns } = usePrRuns(prId, repoId);
   const deleteRun = useDeleteRun(prId);
   const liveRunIds = (activeRuns ?? []).map((r) => r.run_id);
   const reviewRunning = liveRunIds.length > 0;
@@ -69,6 +70,16 @@ export default function PRDetailPage() {
 
   // Reviews come newest-first; each is its own run (grouped into accordions).
   const runs = reviews ?? [];
+  const selectedReviewId = runs.find((review) => review.id === search.get("review"))?.id ?? null;
+  const selectedSeverity = selectedReviewId ? parseSeverity(search.get("severity")) : null;
+  const selectFindings = (reviewId: string, severity: Severity | null) => {
+    const sp = new URLSearchParams(search.toString());
+    sp.set("tab", "findings");
+    sp.set("review", reviewId);
+    if (severity && !(selectedReviewId === reviewId && selectedSeverity === severity)) sp.set("severity", severity);
+    else sp.delete("severity");
+    router.push(`/repos/${repoId}/pulls/${number}?${sp}`, { scroll: false });
+  };
   const allFindings: FindingRecord[] = React.useMemo(
     () => runs.flatMap((r) => r.findings),
     [reviews],
@@ -139,6 +150,9 @@ export default function PRDetailPage() {
         {tab === "findings" && (
           <FindingsTab
             prId={prId}
+            selectedReviewId={selectedReviewId}
+            selectedSeverity={selectedSeverity}
+            onSelectFindings={selectFindings}
             liveRunIds={liveRunIds}
             reviewRunning={reviewRunning}
             lethalTrifecta={lethalTrifecta}

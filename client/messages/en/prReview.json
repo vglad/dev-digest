@@ -1,4 +1,8 @@
 {
+  "cost": {
+    "title": "Cost of this review",
+    "description": "Review cost in USD"
+  },
   "finding": {
     "accepted": "accepted",
     "dismissed": "dismissed",
@@ -92,7 +96,9 @@
       "size": "Size",
       "score": "Score",
       "status": "Status",
-      "updated": "Updated"
+      "cost": "Cost",
+      "updated": "Updated",
+      "findings": "Findings"
     },
     "filesCount": "{count} files",
     "errorTitle": "Couldn’t load pull requests",
@@ -105,5 +111,29 @@
     "goToReview": "Jump to this run’s findings below",
     "openTrace": "Open run trace & logs",
     "deleteRun": "Delete run"
+  },
+  "severity": {
+    "CRITICAL": "Critical",
+    "WARNING": "Warning",
+    "SUGGESTION": "Suggestion",
+    "group": "Filter findings by severity",
+    "summary": "Findings by severity",
+    "count": "{severity}: {count} findings",
+    "empty": "No findings",
+    "preview": "Findings preview",
+    "total": "{count} findings in this run",
+    "confidence": "{percent}% confidence",
+    "loading": "Loading findings…",
+    "error": "Could not load findings.",
+    "unavailable": "This review is no longer available.",
+    "results": "{shown} of {total} findings",
+    "showAll": "Show all",
+    "category": {
+      "bug": "bug",
+      "security": "security",
+      "perf": "performance",
+      "style": "style",
+      "test": "test"
+    }
   }
 }

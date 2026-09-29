@@ -37,14 +37,29 @@ export function usePrActiveRuns(prId: string | null | undefined) {
 // ---- Full run history for a PR (every agent_runs row, any status) ----
 /** All runs for a PR — done, failed (with error), cancelled, running. Survives
    reload (DB-backed). Polls while anything is running so it self-updates. */
-export function usePrRuns(prId: string | null | undefined) {
-  return useQuery({
+export function usePrRuns(
+  prId: string | null | undefined,
+  repoId: string | null | undefined,
+) {
+  const qc = useQueryClient();
+  const query = useQuery({
     queryKey: ["pr-runs", prId],
     queryFn: () => api.get<RunSummary[]>(`/pulls/${prId}/runs`),
     enabled: !!prId,
     refetchInterval: (query) =>
       (query.state.data ?? []).some((r) => r.status === "running") ? 4000 : false,
   });
+  // Observe history independently of the selected detail tab. A changed set
+  // of IDs/statuses covers starts, settlements, and deletions seen by polling.
+  const lifecycle = query.data?.map((r) => `${r.run_id}:${r.status}`).sort().join(",");
+  React.useEffect(() => {
+    if (lifecycle === undefined || !prId) return;
+    qc.invalidateQueries({ queryKey: ["pull", prId] });
+    if (repoId) qc.invalidateQueries({ queryKey: ["pulls", repoId] });
+    qc.invalidateQueries({ queryKey: ["reviews", prId] });
+    qc.invalidateQueries({ queryKey: ["pr-active-runs", prId] });
+  }, [lifecycle, prId, repoId, qc]);
+  return query;
 }
 
 // ---- Persisted reviews + findings for a PR ----
@@ -66,6 +81,8 @@ export function useDeleteRun(prId: string | null | undefined) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["pr-runs", prId] });
       qc.invalidateQueries({ queryKey: ["reviews", prId] });
+      qc.invalidateQueries({ queryKey: ["pull", prId] });
+      qc.invalidateQueries({ queryKey: ["pulls"] });
     },
   });
 }
@@ -82,7 +99,11 @@ export function useDeleteReview(prId: string | null | undefined) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (reviewId: string) => api.del<{ ok: boolean }>(`/reviews/${reviewId}`),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["reviews", prId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["reviews", prId] });
+      qc.invalidateQueries({ queryKey: ["pull", prId] });
+      qc.invalidateQueries({ queryKey: ["pulls"] });
+    },
   });
 }
 
@@ -131,6 +152,10 @@ export function useRunReview() {
       }),
     onSuccess: (_d, { prId }) => {
       qc.invalidateQueries({ queryKey: ["reviews", prId] });
+      qc.invalidateQueries({ queryKey: ["pr-runs", prId] });
+      qc.invalidateQueries({ queryKey: ["pr-active-runs", prId] });
+      qc.invalidateQueries({ queryKey: ["pull", prId] });
+      qc.invalidateQueries({ queryKey: ["pulls"] });
     },
   });
 }

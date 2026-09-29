@@ -3,7 +3,9 @@
 import React from "react";
 import { useTranslations } from "next-intl";
 import { Badge, Icon, CircularScore, type IconName } from "@devdigest/ui";
-import type { RunSummary, PrCommit } from "@devdigest/shared";
+import type { RunSummary, PrCommit, ReviewRecord, FindingRecord } from "@devdigest/shared";
+import { RunFindingsBadges } from "@/components/severity-findings/RunFindingsBadges";
+import { RunCost } from "@/components/RunCost";
 
 /**
  * PR timeline — every agent run interleaved with the PR's commits, newest-first
@@ -86,17 +88,21 @@ function tsOf(s: string | null | undefined): number {
 
 export function RunHistory({
   runs,
+  reviews = [],
   commits = [],
   onOpenTrace,
   onGoToReview,
+  onGoToFinding,
   onDelete,
 }: {
   runs: RunSummary[];
+  reviews?: ReviewRecord[];
   commits?: PrCommit[];
   /** Open the trace + log drawer for a run (the logs icon). */
   onOpenTrace: (runId: string) => void;
   /** Jump to this run's inline review accordion below (clicking the agent name). */
   onGoToReview?: (runId: string) => void;
+  onGoToFinding?: (finding: FindingRecord) => void;
   onDelete?: (runId: string) => void;
 }) {
   const t = useTranslations("prReview");
@@ -147,6 +153,7 @@ export function RunHistory({
         }
 
         const r = item.run;
+        const review = reviews.find((item) => item.run_id === r.run_id);
         const o = outcomeOf(r);
         const settled = r.status === "done";
         return (
@@ -190,13 +197,17 @@ export function RunHistory({
               )}
               {settled && (
                 <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
-                  {t("runStatus.findings", { count: r.findings_count ?? 0 })}
+                  <RunFindingsBadges findings={review?.findings ?? []} onSelectFinding={(finding) => onGoToFinding?.(finding)} />
                   {(r.blockers ?? 0) > 0 ? t("runStatus.blockers", { count: r.blockers ?? 0 }) : ""}
                 </div>
               )}
             </div>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2, fontSize: 11, color: "var(--text-muted)", flexShrink: 0 }}>
               {r.ran_at && <span>{new Date(r.ran_at).toLocaleTimeString()}</span>}
+              <span className="mono tnum" style={{ display: "inline-flex", alignItems: "baseline", gap: 4 }}>
+                {settled && <span>{r.tokens_in?.toLocaleString() ?? "—"} tok ·</span>}
+                <RunCost cost={r.cost_usd} precision="timeline" />
+              </span>
             </div>
             <button
               type="button"
