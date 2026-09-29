@@ -2,7 +2,7 @@
 
 Inherits [repository guidance](../AGENTS.md). This package is pure review logic; its only intended side effect is the injected LLM call.
 
-## Read first
+## Read When
 
 - [Pipeline and public API](./README.md)
 - [Review-engine deep dives](./docs/README.md) for pipeline and design notes

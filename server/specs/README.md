@@ -1,3 +1,4 @@
 # API specifications
 
-Feature contracts and acceptance criteria for `@devdigest/api` belong here. Keep route and service behavior aligned with the Zod contracts and cover it with hermetic tests or `*.it.test.ts` database tests as described in the [test strategy](../../TESTING.md).
+- [Review lifecycle and persistence](./review-flow.md) — the behavior the current implementation must preserve.
+- [Architecture](../docs/architecture.md) — why responsibilities and data flow are arranged this way.

@@ -2,7 +2,7 @@
 
 Inherits [repository guidance](../AGENTS.md). This package contains deterministic `agent-browser` flows.
 
-## Read first
+## Read When
 
 - [Runner, flow format, and preconditions](./README.md)
 - [E2E design notes](./docs/README.md)

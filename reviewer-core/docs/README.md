@@ -1,3 +1,5 @@
-# Review-engine deep dives
+# Review engine architecture
 
-Long-form pipeline, grounding, structured-output, and reduction design notes for `@devdigest/reviewer-core` belong here. Start with the [pipeline overview](../README.md), and use the repository-level [prompt guide](../../docs/agent-prompts/README.md) for prompt-authoring rules.
+- [Engine boundaries and pipeline](./pipeline.md) — read when changing package boundaries or data flow.
+- [Behavioral specifications](../specs/review-engine.md) — read when changing observable behavior.
+- [Package setup](../README.md).

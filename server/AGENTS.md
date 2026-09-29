@@ -2,7 +2,7 @@
 
 Inherits [repository guidance](../AGENTS.md). This package is the Fastify 5 API backed by Drizzle and PostgreSQL/pgvector.
 
-## Read first
+## Read When
 
 - [API architecture, environment, and request flow](./README.md)
 - [API deep dives](./docs/README.md) for pipeline and design notes

@@ -2,7 +2,7 @@
 
 Inherits [repository guidance](../AGENTS.md). This package is the Next.js 15/React 19 studio.
 
-## Read first
+## Read When
 
 - [Web architecture and route map](./README.md)
 - [Web deep dives](./docs/README.md) for design notes and diagrams

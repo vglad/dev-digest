@@ -1,3 +1,5 @@
-# Web deep dives
+# Web architecture
 
-Long-form design notes, diagrams, and implementation explanations for `@devdigest/web` belong here. Start with the [package overview](../README.md); add a focused document here when a UI subsystem needs more detail than that overview should carry.
+- [UI boundaries and data flow](./ui-architecture.md) — read when changing package boundaries or data flow.
+- [Behavioral specifications](../specs/pages.md) — read when changing observable behavior.
+- [Package setup](../README.md).

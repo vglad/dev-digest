@@ -1,3 +1,5 @@
-# E2E deep dives
+# Browser E2E architecture
 
-Long-form runner, environment, and browser-automation design notes for `@devdigest/e2e` belong here. Start with the [package guide](../README.md), which documents the flow format, hermetic stack, and local-run preconditions.
+- [Runner and isolated-stack ownership](./runner-architecture.md) — read when changing package boundaries or data flow.
+- [Behavioral specifications](../specs/browser-flows.md) — read when changing observable behavior.
+- [Package setup](../README.md).
